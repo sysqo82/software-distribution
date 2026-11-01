@@ -1,0 +1,11 @@
+{
+  "name": "software-distribution",
+  "version": "1.3.7",
+  "private": true,
+  "type": "module",
+  "description": "Local software distribution web dashboard",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}

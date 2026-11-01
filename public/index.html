@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Software Distribution Platform</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main class="panel">
+    <header>
+      <p class="eyebrow">HOME NETWORK APP PUSHER</p>
+      <h1>Software Distribution Platform</h1>
+      <p class="intro">Copy an installer to a PC on your network, install it silently for all users, and optionally start it.</p>
+    </header>
+
+    <form id="deploy-form">
+      <label for="target-pc">Target PC (hostname or IP address)</label>
+      <select id="saved-targets" aria-label="Previously used PCs">
+        <option value="">Previously used PCs…</option>
+      </select>
+      <input id="target-pc" autocomplete="off" placeholder="192.168.1.20" required>
+      <div class="button-row">
+        <button id="remove-target" class="secondary" type="button">Remove from list</button>
+      </div>
+
+      <label for="installer">Installer (.exe or .msi)</label>
+      <div class="button-row file-row">
+        <input id="installer" type="file" accept=".exe,.msi" hidden required>
+        <button id="browse" class="secondary" type="button">Browse…</button>
+        <span id="file-name">No file selected</span>
+      </div>
+
+      <label for="silent-flags">EXE silent switches <span>(ignored for MSI)</span></label>
+      <input id="silent-flags" value="/qn /norestart ALLUSERS=1">
+      <p class="hint">Use these for jpackage / MSI-based setups (like DeezerScrobbler). Other installers: /VERYSILENT (Inno Setup) or /S (NSIS).</p>
+
+      <label for="launch-path">Installed app path on the target PC</label>
+      <input id="launch-path" placeholder="C:\Program Files\MyApp\MyApp.exe" required>
+      <p class="hint">Full path of the installed program. It is started automatically on the logged-in user's desktop as soon as the install finishes, with no sign-in needed.</p>
+
+      <button id="submit" class="primary" type="submit">Push &amp; Install</button>
+    </form>
+
+    <section id="result" class="result" aria-live="polite" hidden>
+      <p id="result-title"></p>
+      <ol id="steps"></ol>
+      <p id="result-message"></p>
+    </section>
+  </main>
+</body>
+</html>
