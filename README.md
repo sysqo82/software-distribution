@@ -26,6 +26,8 @@ Required full path of the installed program on the target. The app is started ri
 
 Used for `.exe` installers (ignored for `.msi`). Default `/qn /norestart ALLUSERS=1` suits jpackage/MSI-based setups such as DeezerScrobbler. Use `/VERYSILENT` for Inno Setup and `/S` for NSIS. Switches that don't match the installer make it wait on a hidden dialog until the timeout.
 
+After each push, the switches and launch path are saved under the app's name (the launch file name, e.g. `DeezerScrobbler`) in `apps.json` in the same volume. Pick it from **Saved apps** to fill both fields.
+
 ## Notes
 
 - Installing the same version again depends on the installer; MSI-based ones may refuse it (e.g. exit code 1638).

@@ -6,10 +6,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createAppServer } from '../server.js';
 import { createTargetStore } from '../lib/targets.js';
+import { createAppStore } from '../lib/apps.js';
 
 async function start(remote, context) {
-  const targets = createTargetStore(await mkdtemp(path.join(tmpdir(), 'targets-')));
-  const server = createAppServer({ remote, targets });
+  const directory = await mkdtemp(path.join(tmpdir(), 'targets-'));
+  const server = createAppServer({ remote, targets: createTargetStore(directory), apps: createAppStore(directory) });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   context.after(() => new Promise((resolve) => server.close(resolve)));
   return `http://127.0.0.1:${server.address().port}`;
@@ -88,6 +89,25 @@ test('lists, orders and removes saved PCs', async (context) => {
 
   const removed = await fetch(`${baseUrl}/api/targets?target=pc-1`, { method: 'DELETE' });
   assert.deepEqual((await removed.json()).targets, ['pc-2']);
+});
+
+test('saves switches and launch path per app, and removes them', async (context) => {
+  const baseUrl = await start(okRemote, context);
+  const push = async (flags, launch) => {
+    const query = new URLSearchParams({ targetPc: 'pc-1', silentFlags: flags, launchPath: launch });
+    const response = await fetch(`${baseUrl}/api/deploy?${query}`, { method: 'POST', headers: { 'X-Filename': 'a.exe' }, body: 'x' });
+    await finishedJob(baseUrl, (await response.json()).jobId);
+  };
+  await push('/S', 'C:\\Old\\Lock.exe');
+  await push('/qn', 'C:\\Deezer\\Deezer.exe');
+  await push('/VERYSILENT', 'C:\\New\\Lock.exe');
+
+  assert.deepEqual((await (await fetch(`${baseUrl}/api/apps`)).json()).apps, [
+    { name: 'Lock', silentFlags: '/VERYSILENT', launchPath: 'C:\\New\\Lock.exe' },
+    { name: 'Deezer', silentFlags: '/qn', launchPath: 'C:\\Deezer\\Deezer.exe' }
+  ]);
+  const removed = await fetch(`${baseUrl}/api/apps?name=Lock`, { method: 'DELETE' });
+  assert.deepEqual((await removed.json()).apps.map((app) => app.name), ['Deezer']);
 });
 
 test('rejects foreign Host headers', async (context) => {
