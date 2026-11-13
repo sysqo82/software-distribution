@@ -40,6 +40,16 @@ test('cleanup removes every earlier version of the installer', () => {
   assert.match(script, /Remove-Item -Path 'C:\\Windows\\Temp\\DeezerScrobbler\*\.exe'/);
 });
 
+test('cleanup stops MediaBridge only when deploying DeezerScrobbler', () => {
+  const deezer = buildCleanupScript({ fileName: 'DeezerScrobbler-1.3.16.exe', launchPath: 'C:\\Program Files\\DeezerScrobbler\\DeezerScrobbler.exe' });
+  assert.match(deezer, /Stop-Process -Name 'DeezerScrobbler' -Force/);
+  assert.match(deezer, /Stop-Process -Name 'MediaBridge' -Force/);
+
+  const other = buildCleanupScript({ fileName: 'PCLockScreen-2.0.0.msi', launchPath: 'C:\\Program Files (x86)\\PCLockScreen\\PCLockScreen.exe' });
+  assert.match(other, /Stop-Process -Name 'PCLockScreen' -Force/);
+  assert.doesNotMatch(other, /MediaBridge/);
+});
+
 test('escapes single quotes in the launch path', () => {
   assert.match(buildLaunchScript({ launchPath: "C:\\Program Files\\O'Neil\\a.exe" }), /O''Neil/);
 });
