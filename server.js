@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { deploy, validateRequest, ValidationError } from './lib/deploy.js';
 import { createTargetStore } from './lib/targets.js';
+import { createAppStore } from './lib/apps.js';
 import * as defaultRemote from './lib/remote.js';
 
 const publicDirectory = fileURLToPath(new URL('./public/', import.meta.url));
@@ -27,7 +28,7 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body));
 }
 
-export function createAppServer({ remote = defaultRemote, targets = createTargetStore() } = {}) {
+export function createAppServer({ remote = defaultRemote, targets = createTargetStore(), apps = createAppStore() } = {}) {
   const jobs = new Map();
 
   function startJob(details, upload) {
@@ -39,6 +40,7 @@ export function createAppServer({ remote = defaultRemote, targets = createTarget
     }
 
     targets.add(details.targetPc)
+      .then(() => apps.add(details))
       .then(() => deploy(details, upload, remote, (step) => job.steps.push(step)))
       .then((message) => {
         job.message = message;
@@ -95,6 +97,11 @@ export function createAppServer({ remote = defaultRemote, targets = createTarget
       } else if (request.method === 'DELETE' && url.pathname === '/api/targets') {
         await targets.remove(url.searchParams.get('target') ?? '');
         sendJson(response, 200, { targets: await targets.list() });
+      } else if (request.method === 'GET' && url.pathname === '/api/apps') {
+        sendJson(response, 200, { apps: await apps.list() });
+      } else if (request.method === 'DELETE' && url.pathname === '/api/apps') {
+        await apps.remove(url.searchParams.get('name') ?? '');
+        sendJson(response, 200, { apps: await apps.list() });
       } else if (request.method === 'GET' && assets.has(url.pathname)) {
         const [file, type] = assets.get(url.pathname);
         response.writeHead(200, { ...headers, 'Content-Type': type });

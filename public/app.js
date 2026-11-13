@@ -8,6 +8,10 @@ const result = document.querySelector('#result');
 const resultTitle = document.querySelector('#result-title');
 const resultMessage = document.querySelector('#result-message');
 const stepsList = document.querySelector('#steps');
+const savedApps = document.querySelector('#saved-apps');
+const silentFlags = document.querySelector('#silent-flags');
+const launchPath = document.querySelector('#launch-path');
+let apps = [];
 
 function renderResult(state, steps, message = '') {
   result.hidden = false;
@@ -29,6 +33,35 @@ async function loadTargets() {
     renderTargets([]);
   }
 }
+
+function renderApps(list) {
+  apps = list;
+  const options = apps.map((app) => Object.assign(document.createElement('option'), { value: app.name, textContent: app.name }));
+  savedApps.replaceChildren(Object.assign(document.createElement('option'), { value: '', textContent: 'Choose a saved app to fill the switches and path…' }), ...options);
+}
+
+async function loadApps() {
+  try {
+    renderApps((await (await fetch('/api/apps')).json()).apps);
+  } catch {
+    renderApps([]);
+  }
+}
+
+savedApps.addEventListener('change', () => {
+  const app = apps.find((saved) => saved.name === savedApps.value);
+  if (app) {
+    silentFlags.value = app.silentFlags;
+    launchPath.value = app.launchPath;
+  }
+});
+
+document.querySelector('#remove-app').addEventListener('click', async () => {
+  if (savedApps.value) {
+    const response = await fetch(`/api/apps?${new URLSearchParams({ name: savedApps.value })}`, { method: 'DELETE' });
+    renderApps((await response.json()).apps);
+  }
+});
 
 savedTargets.addEventListener('change', () => {
   if (savedTargets.value) {
@@ -76,8 +109,8 @@ form.addEventListener('submit', async (event) => {
 
   const query = new URLSearchParams({
     targetPc: targetInput.value,
-    silentFlags: document.querySelector('#silent-flags').value,
-    launchPath: document.querySelector('#launch-path').value
+    silentFlags: silentFlags.value,
+    launchPath: launchPath.value
   });
   submit.disabled = true;
   renderResult('running', ['Uploading the installer']);
@@ -94,6 +127,8 @@ form.addEventListener('submit', async (event) => {
     }
     await waitForJob(body.jobId);
     await loadTargets();
+loadApps();
+    await loadApps();
   } catch (error) {
     renderResult('failed', [], error.message);
   } finally {
@@ -102,3 +137,4 @@ form.addEventListener('submit', async (event) => {
 });
 
 loadTargets();
+loadApps();

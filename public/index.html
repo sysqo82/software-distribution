@@ -32,9 +32,17 @@
         <span id="file-name">No file selected</span>
       </div>
 
+      <label for="saved-apps">Saved apps</label>
+      <select id="saved-apps">
+        <option value="">Choose a saved app to fill the switches and path…</option>
+      </select>
+      <div class="button-row">
+        <button id="remove-app" class="secondary" type="button">Remove from list</button>
+      </div>
+
       <label for="silent-flags">EXE silent switches <span>(ignored for MSI)</span></label>
       <input id="silent-flags" value="/qn /norestart ALLUSERS=1">
-      <p class="hint">Use these for jpackage / MSI-based setups (like DeezerScrobbler). Other installers: /VERYSILENT (Inno Setup) or /S (NSIS).</p>
+      <p class="hint">Use these for jpackage / MSI-based setups (like DeezerScrobbler). Other installers: /VERYSILENT (Inno Setup) or /S (NSIS). The switches and app path are saved per app after each push.</p>
 
       <label for="launch-path">Installed app path on the target PC</label>
       <input id="launch-path" placeholder="C:\Program Files\MyApp\MyApp.exe" required>
